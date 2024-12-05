@@ -1,0 +1,168 @@
+# Numerical Optimization Methods
+# Isaac Parra
+# isaac.xp.parra@gmail.com
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# Functions
+def rosenbrock_function(x, A=1):
+   x1, x2 = x
+   return A * (x2 - x1 ** 2) ** 2 + (1 - x1) ** 2
+
+
+
+
+def rosenbrock_gradient(x, A=1):
+   x1, x2 = x
+   df_dx1 = -4 * A * x1 * (x2 - x1 ** 2) - 2 * (1 - x1)
+   df_dx2 = 2 * A * (x2 - x1 ** 2)
+   return np.array([df_dx1, df_dx2])
+
+
+
+
+def backtracking_line_search(f, grad, x, p, A=1, alpha=1.0, rho=0.5, c=0.01):
+   """Backtracking line search to determine step length."""
+   while f(x + alpha * p, A) > f(x, A) + c * alpha * np.dot(p, grad):
+       alpha *= rho
+   return alpha
+
+
+def fletcher_reeves_conjugate_gradient(x0, A=1, tol=1e-3, max_iters=1000):
+   """Fletcher-Reeves nonlinear conjugate gradient method with restart."""
+   x = x0
+   grad = rosenbrock_gradient(x, A)
+   p = -grad
+   grad_norm = np.linalg.norm(grad)
+   history = {'cost': [], 'gradient_norm': [], 'x': []}
+
+
+   for k in range(max_iters):
+       grad_norm = np.linalg.norm(grad)
+       history['cost'].append(rosenbrock_function(x, A))
+       history['gradient_norm'].append(grad_norm)
+       history['x'].append(x)
+
+
+       if grad_norm < tol:
+           break
+
+
+       alpha = backtracking_line_search(rosenbrock_function, grad, x, p, A)
+
+
+       x_new = x + alpha * p
+
+
+       grad_new = rosenbrock_gradient(x_new, A)
+
+
+       if np.dot(p, grad_new) > 0:
+           beta = 0
+       else:
+           beta = np.dot(grad_new, grad_new) / np.dot(grad, grad)
+
+
+       p = -grad_new + beta * p
+       x = x_new
+       grad = grad_new
+
+
+   return x, k + 1, history
+
+
+
+
+initial_guess = np.array([-1.2, 1])
+A_values = [1, 100]
+
+
+for A in A_values:
+   print(f"\nExperiment for A = {A}\n")
+   x_opt, iters, history = fletcher_reeves_conjugate_gradient(initial_guess, A)
+   print("Fletcher-Reeves Results:")
+   print(f"Optimal solution: {x_opt}")
+   print(f"Number of iterations: {iters}")
+
+
+
+
+   plt.figure(figsize=(10, 5))
+   plt.subplot(1, 2, 1)
+   plt.plot(history['cost'], label="Cost Function")
+   plt.title(f"Cost Function Evolution (A = {A})")
+   plt.xlabel("Iteration")
+   plt.ylabel("f(x)")
+   plt.legend()
+
+
+   plt.subplot(1, 2, 2)
+   plt.plot(history['gradient_norm'], label="Gradient Norm")
+   plt.title(f"Gradient Norm Evolution (A = {A})")
+   plt.xlabel("Iteration")
+   plt.ylabel("||∇f(x)||")
+   plt.legend()
+
+
+   plt.tight_layout()
+   plt.show()
+
+
+
+
+## part 2
+# Experiment setup
+initial_guess = np.array([-1.2, 1])
+A_values = [1, 100]
+
+
+for A in A_values:
+   print(f"\nExperiment for A = {A}\n")
+   x_opt, iters, history = fletcher_reeves_conjugate_gradient(initial_guess, A)
+
+
+   # Count the number of restarts
+   restarts = sum(
+       1 for i in range(len(history['gradient_norm']) - 1)
+       if np.dot(-history['gradient_norm'][i], history['gradient_norm'][i + 1]) >= 0
+   )
+
+
+   print(f"Fletcher-Reeves Results for A={A}:")
+   print(f"Approximate solution: {x_opt}")
+   print(f"Number of iterations: {iters}")
+   print(f"Number of function evaluations: {2 * iters}")
+   print(f"Number of restarts: {restarts}")
+
+
+   # Plot results
+   import matplotlib.pyplot as plt
+
+
+   plt.figure(figsize=(10, 5))
+
+
+   plt.subplot(1, 2, 1)
+   plt.plot(history['cost'], label="Cost Function")
+   plt.title(f"Cost Function Evolution (A = {A})")
+   plt.xlabel("Iteration")
+   plt.ylabel("f(x)")
+   plt.legend()
+
+
+   plt.subplot(1, 2, 2)
+   plt.plot(history['gradient_norm'], label="Gradient Norm")
+   plt.title(f"Gradient Norm Evolution (A = {A})")
+   plt.xlabel("Iteration")
+   plt.ylabel("||∇f(x)||")
+   plt.legend()
+
+
+   plt.tight_layout()
+   plt.show()
+
+
+
+
+
