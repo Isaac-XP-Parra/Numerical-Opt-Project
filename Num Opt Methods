@@ -1,6 +1,7 @@
 # Numerical Optimization Methods
 # Isaac Parra
 # isaac.xp.parra@gmail.com
+# Python
 import numpy as np
 import matplotlib.pyplot as plt
 
